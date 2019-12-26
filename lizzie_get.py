@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.01"
+__version__ = "0.02"
 """
 Source : https://github.com/izneo-get/lizzie-get
 
@@ -135,12 +135,35 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output-folder", "-o", type=str, default=None, help="Répertoire racine de téléchargement"
     )
+    parser.add_argument(
+        "--config", type=str, default=None, help="Fichier de configuration"
+    )
     args = parser.parse_args()
 
-    output_folder = args.output_folder if args.output_folder else os.path.dirname(os.path.abspath(sys.argv[0])) + "/DOWNLOADS"
+    # Lecture de la config.
+    config = configparser.RawConfigParser()
+    if args.config:
+        config_name = args.config
+    else:
+        config_name = re.sub(r"\.exe$", ".cfg", re.sub(r"\.py$", ".cfg", os.path.basename(sys.argv[0])))
+    config.read(config_name)
+
+    def get_param_or_default(
+        config, param_name, default_value, cli_value=None
+    ):
+        if cli_value is None:
+            return (
+                config.get("DEFAULT", param_name)
+                if config.has_option("DEFAULT", param_name)
+                else default_value
+            )
+        else:
+            return cli_value
+
+    output_folder = get_param_or_default(config, "output_folder", os.path.dirname(os.path.abspath(sys.argv[0])) + "/DOWNLOADS", args.output_folder)
     if not os.path.exists(output_folder): os.mkdir(output_folder)
 
-    session_id = args.session_id if args.session_id else ''
+    session_id = get_param_or_default(config, "session_id", "", args.session_id)
     while not session_id and session_id.lower() != 'q':
         session_id = input("Identifiant de session ('q' pour quitter) : ")
     if session_id.lower() == 'q':
