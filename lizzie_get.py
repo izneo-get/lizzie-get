@@ -49,7 +49,7 @@ def choose_book():
     index = 1
     books_url = {}
     books_title = {}
-    for div in soup.find_all("div", class_="my-ebooks"):
+    for div in soup.find_all("div", class_="ebook_infos"):
         title = div.find("p", class_="title")
         title = title.text.strip()
         authors = div.find("p", class_="authors")
