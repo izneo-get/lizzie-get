@@ -17,6 +17,7 @@ import shutil
 import time
 from bs4 import BeautifulSoup
 import json
+import urllib.parse
 
 
 def requests_retry_session(
@@ -89,6 +90,8 @@ def download_file(url, name=''):
     """
     if not name:
         name = re.findall('filePath=([^"]+)', url)[0]
+        name = urllib.parse.unquote(name)
+        name = re.sub(r'[/\\<>:"|\?\*]', '_', name)
     store_path = output_folder + '/' + name
     r = requests_retry_session(session=s).get(url, cookies=s.cookies, allow_redirects=True)
     open(store_path, "wb").write(r.content)
