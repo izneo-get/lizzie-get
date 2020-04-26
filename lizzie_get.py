@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.02"
+__version__ = "0.03"
 """
 Source : https://github.com/izneo-get/lizzie-get
 
@@ -64,7 +64,7 @@ def choose_book():
 
     if len(books_title) == 0:
         print("Aucun livre trouvé dans cette session. Vérifiez votre identifiant de session...")
-        exit()
+        exit(0)
         
     choice = 'none'
     while choice not in books_url and choice.lower() != 'q':
@@ -93,13 +93,35 @@ def download_file(url, name=''):
         name = urllib.parse.unquote(name)
         name = re.sub(r'[/\\<>:"|\?\*]', '_', name)
     store_path = output_folder + '/' + name
-    r = requests_retry_session(session=s).get(url, cookies=s.cookies, allow_redirects=True)
+
+    headers = {
+        'User-Agent': user_agent,
+        # 'Accept': 'audio/webm,audio/ogg,audio/wav,audio/*;q=0.9,application/ogg;q=0.7,video/*;q=0.6,*/*;q=0.5',
+        # 'Accept-Language': 'fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3',
+        'Range': 'bytes=0-',
+        'Connection': 'keep-alive',
+        # 'Referer': 'https://abonnement.lizzie.audio/my-books',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+    }
+
+    r = requests_retry_session(session=s).get(url, cookies=s.cookies, headers=headers, allow_redirects=True)
     open(store_path, "wb").write(r.content)
+
+    # my_file = open(store_path, 'wb')
+    # resp = requests.get(url, stream=True, headers=headers, cookies=cookies, allow_redirects=False)
+    # if resp.status_code != 200:
+    #     print('not 200!')
+    #     print(resp)
+    #     print(url)
+    # for chunk in resp:
+    #     my_file.write(chunk)
+    #     my_file.flush()
     return
 
 
 def download_book(book_id):
-    """Permet de télécharger tou un livre.
+    """Permet de télécharger tout un livre.
     
     Parameters
     ----------
@@ -128,12 +150,17 @@ if __name__ == "__main__":
     listen_book_url = "https://abonnement.lizzie.audio/listen-book/"
     root_path = "https://www.izneo.com/"
 
+    default_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0'
+
     # Parse des arguments passés en ligne de commande.
     parser = argparse.ArgumentParser(
     description="""Script pour sauvegarder un livre audio depuis son compte Lizzie."""
     )
     parser.add_argument(
         "--session-id", "-s", type=str, default=None, help="L'identifiant de session (à récupérer dans les cookies)"
+    )
+    parser.add_argument(
+        "--user-agent", "-u", type=str, default=None, help="Le User-Agent à utiliser pour se faire passer pour un navigateur"
     )
     parser.add_argument(
         "--output-folder", "-o", type=str, default=None, help="Répertoire racine de téléchargement"
@@ -165,6 +192,8 @@ if __name__ == "__main__":
 
     output_folder = get_param_or_default(config, "output_folder", os.path.dirname(os.path.abspath(sys.argv[0])) + "/DOWNLOADS", args.output_folder)
     if not os.path.exists(output_folder): os.mkdir(output_folder)
+
+    user_agent = get_param_or_default(config, "user_agent", default_user_agent, args.user_agent)
 
     session_id = get_param_or_default(config, "session_id", "", args.session_id)
     while not session_id and session_id.lower() != 'q':
