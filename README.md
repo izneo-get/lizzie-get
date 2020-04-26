@@ -10,13 +10,22 @@ Il est évident que les livres audios ne doivent en aucun cas être conservés u
 Script pour sauvegarder un livre audio depuis son compte Lizzie.
 **Utilisation**  
 ```
+usage: python lizzie_get.py [-h] [--session-id SESSION_ID] [--user-agent USER_AGENT]
+                     [--output-folder OUTPUT_FOLDER] [--config CONFIG]
+
+Script pour sauvegarder un livre audio depuis son compte Lizzie.
+
 optional arguments:
   -h, --help            show this help message and exit
   --session-id SESSION_ID, -s SESSION_ID
                         L'identifiant de session (à récupérer dans les
                         cookies)
+  --user-agent USER_AGENT, -u USER_AGENT
+                        Le User-Agent à utiliser pour se faire passer pour un
+                        navigateur
   --output-folder OUTPUT_FOLDER, -o OUTPUT_FOLDER
                         Répertoire racine de téléchargement
+  --config CONFIG       Fichier de configuration
 
 ```
 
