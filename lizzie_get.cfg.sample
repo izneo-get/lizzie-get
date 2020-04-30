@@ -4,3 +4,9 @@ session_id = REMPLISSEZ_MOI
 
 # Pour définir un répertoire de téléchargement autre que la racine.
 #output_folder = c:/Mon/Repertoire/lizzie
+
+# Pour définir le user-agent à utiliser.
+user_agent = Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0
+
+# Pause (en secondes) à respecter entre 2 chapitres.
+pause = 60

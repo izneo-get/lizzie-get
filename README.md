@@ -26,6 +26,9 @@ optional arguments:
   --output-folder OUTPUT_FOLDER, -o OUTPUT_FOLDER
                         Répertoire racine de téléchargement
   --config CONFIG       Fichier de configuration
+  --pause PAUSE, -p PAUSE
+                        Pause (en secondes) entre chaque fichier
+  --overwrite, -w       Re-télécharge et écrase les fichiers déjà existants
 
 ```
 
