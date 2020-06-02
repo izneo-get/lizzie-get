@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.01"
+__version__ = "0.02"
 """
 Source : https://github.com/izneo-get/lizzie-get
 
@@ -10,15 +10,23 @@ import os
 import sys
 import glob
 import eyed3
+import re 
 
 if __name__ == "__main__":
 
     folder = sys.argv[1] if len(sys.argv) > 1 else '.'
     
     list_dir = glob.glob(folder + '/*.v3.exo')
-    list_dir = sorted(list_dir)
-    list_chapters = {}
+    tuple_dir = []
     for f in list_dir:
+        pattern = re.compile(r'(.*?)(\d+)\.(\d+)\.(\d+)\.v3\.exo')
+        parts = pattern.fullmatch(f)
+        key_order = ('00000000000000' + parts[2])[-14:] + ('00000000000000' + parts[3])[-14:] + ('00000000000000' + parts[4])[-14:]
+        tuple_dir.append( (f, key_order) )
+
+    list_dir = sorted(tuple_dir, key=lambda tuple_dir: tuple_dir[1])
+    list_chapters = {}
+    for (f, tmp) in list_dir:
         base_name = os.path.basename(f)
         chapter = base_name.split('.')[0]
         if chapter not in list_chapters:
