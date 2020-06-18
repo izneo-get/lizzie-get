@@ -37,7 +37,7 @@ if __name__ == "__main__":
     for c in list_chapters:
         audiofile = eyed3.load(list_chapters[c][0])
         # chapter_name = audiofile.tag.title if audiofile.tag.title else (audiofile.tag.album + '_' + c if audiofile.tag.album else c)
-        chapter_name = audiofile.tag.album + '_' + ('000' + c)[-3:] if audiofile.tag.album else ('000' + c)[-3:]
+        chapter_name = audiofile.tag.album + '_' + ('000' + c)[-3:] if audiofile.tag and audiofile.tag.album else ('000' + c)[-3:]
         all_parts = '|'.join(list_chapters[c])
         print(f"ffmpeg -i \"concat:{all_parts}\" -c copy \"{chapter_name}.mp3\" && ^")
     print("echo Done!")
