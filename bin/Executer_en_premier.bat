@@ -1,1 +1,1 @@
-create_ffmpeg_cmd.exe C:\Temp\book > Executer_ensuite.bat
+create_ffmpeg_cmd.exe "C:\Temp\book" "{album}_{id}_{titre}" > Executer_ensuite.bat
