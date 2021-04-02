@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.04"
+__version__ = "1.01.1"
 """
 Source : https://github.com/izneo-get/lizzie-get
 
@@ -18,6 +18,7 @@ import time
 from bs4 import BeautifulSoup
 import json
 import urllib.parse
+from pathlib import Path
 
 
 def requests_retry_session(
@@ -41,7 +42,23 @@ def requests_retry_session(
     session.mount('https://', adapter)
     return session
 
+
+def check_version():
+    latest_version_url = 'https://raw.githubusercontent.com/izneo-get/lizzie-get/master/VERSION'
+    res = requests.get(latest_version_url)
+    if res.status_code != 200:
+        print(f"Version {__version__} (impossible de vérifier s'il existe une version plus récente)")
+    else:
+        latest_version = res.text.strip()
+        if latest_version == __version__:
+            print(f"Version {__version__} (la plus récente)")
+        else:
+            print(f"Version {__version__} (il existe une version plus récente : {latest_version})")
+            print("https://github.com/izneo-get/lizzie-get/releases")
+
+
 def choose_book():
+    global output_folder
     """Permet de choisir un livre parmi ceux disponibles dans la session.
     """
     r = requests_retry_session(session=s).get(my_books_url, cookies=s.cookies, allow_redirects=True)
@@ -51,12 +68,12 @@ def choose_book():
     books_url = {}
     books_title = {}
     books_key = {}
-    for div in soup.find_all("div", class_="ebook_infos"):
-        title = div.find("p", class_="title")
+    for div in soup.find_all("div", {"class": "ebook_infos"}):
+        title = div.find("p", {"class" : "title"})
         title = title.text.strip() if title else 'Titre inconnu'
-        authors = div.find("p", class_="authors")
+        authors = div.find("p", {"class" : "authors"})
         authors = authors.text.strip() if authors else 'Auteur inconnu'
-        url = div.find("a", class_="btn")
+        url = div.find("a", {"class" : "btn"})
         book_id = re.findall(r"getPlaylist\('(.*)/(\d+)/(\d+)(.*)'", url.attrs["onclick"])
         if book_id:
             book_id = book_id[0]
@@ -84,6 +101,10 @@ def choose_book():
             if choice not in books_url:
                 print("Pas de livre ayant ce numéro...")
     print(books_title[choice])
+    sub_folder = urllib.parse.unquote(books_title[choice])
+    sub_folder = re.sub(r'[/\\<>:"|\?\*]', '_', sub_folder)
+    output_folder += f"/{sub_folder}"
+
     return books_url[choice] + "?mode=new" + books_key[choice]
 
 
@@ -102,6 +123,8 @@ def download_file(url, name=''):
         name = urllib.parse.unquote(name)
         name = re.sub(r'[/\\<>:"|\?\*]', '_', name)
     store_path = output_folder + '/' + name
+    if store_path[:-4].lower() != '.mp3':
+        store_path += '.mp3'
 
     if overwrite == False and os.path.exists(store_path) == True:
         print(f"\"{store_path}\" existe déjà, on passe.")
@@ -160,7 +183,7 @@ def download_book(book_id):
     book_id_clean = book_id.split('?')[0]
     files = re.findall(listen_book_url + book_id_clean + r'\?filePath=([^"]+)', res['html'])
     for f in files:
-        print(f"Téléchargement de {f}")
+        print(f"Téléchargement de \"{f}\"")
         url = listen_book_url + book_id_clean + '?filePath=' + f
         is_downloaded = download_file(url)
         if is_downloaded:
@@ -172,11 +195,13 @@ def download_book(book_id):
 
 
 if __name__ == "__main__":
+    check_version()
     cfduid = ""
     session_id = ""
+    # my_books_url = "https://api.staytuned.io/v1/transactions"
     my_books_url = "https://abonnement.lizzie.audio/my-books"
     listen_book_url = "https://abonnement.lizzie.audio/listen-book/"
-    root_path = "https://www.izneo.com/"
+    root_path = "https://abo.lizzie.audio/"
 
     default_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0'
 
@@ -225,7 +250,7 @@ if __name__ == "__main__":
             return cli_value
 
     output_folder = get_param_or_default(config, "output_folder", os.path.dirname(os.path.abspath(sys.argv[0])) + "/DOWNLOADS", args.output_folder)
-    if not os.path.exists(output_folder): os.mkdir(output_folder)
+    # if not os.path.exists(output_folder): os.mkdir(output_folder)
 
     user_agent = get_param_or_default(config, "user_agent", default_user_agent, args.user_agent)
 
@@ -241,12 +266,22 @@ if __name__ == "__main__":
 
     # Création d'une session et création du cookie.
     s = requests.Session()
+    # cookie_obj = requests.cookies.create_cookie(domain='.lizzie.audio', name='didomi_token', value=session_id)
     cookie_obj = requests.cookies.create_cookie(domain='abonnement.lizzie.audio', name='SESS', value=session_id)
     s.cookies.set_cookie(cookie_obj)
     
+    # On cherche quel est le JS qui contient les variables.
+    r = requests_retry_session(session=s).get("https://abo.lizzie.audio/library/my-audiobooks", cookies=s.cookies, allow_redirects=True)
+    main_js_url = root_path + 'main.' + re.findall(r"main\.([\w\d]+)\.js", r.text)[0] + '.js'
+
+    r = requests_retry_session(session=s).get(main_js_url, cookies=s.cookies, allow_redirects=True)
+    authToken = re.findall(r"authToken:\"(.+?)\"", r.text)[0]
+    partnerKey = re.findall(r"partnerKey:\"(.+?)\"", r.text)[0]
+
 
     # Choix du livre.
     book_url = choose_book()
+    Path(output_folder).mkdir(parents=True, exist_ok=True)
 
     # Téléchargement du livre.
     download_book(book_url)
