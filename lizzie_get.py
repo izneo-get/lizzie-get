@@ -90,13 +90,13 @@ def choose_book():
 
     if len(books_title) == 0:
         print("Aucun livre trouvé dans cette session. Vérifiez votre identifiant de session...")
-        exit(0)
+        sys.exit(0)
         
     choice = 'none'
     while choice not in books_url and choice.lower() != 'q':
         choice = input("Quel livre souhaitez-vous télécharger ('q' pour quitter) ? ")
         if choice.lower() == 'q':
-            exit()
+            sys.exit()
         else:
             if choice not in books_url:
                 print("Pas de livre ayant ce numéro...")
@@ -258,7 +258,7 @@ if __name__ == "__main__":
     while not session_id and session_id.lower() != 'q':
         session_id = input("Identifiant de session ('q' pour quitter) : ")
     if session_id.lower() == 'q':
-        exit()
+        sys.exit()
 
     pause = int(get_param_or_default(config, "pause", "60", args.pause))
 
